@@ -1,0 +1,4 @@
+import os ;
+local Architecture = [ os.environ BOOSTARCH ] ;
+
+option.set address-model: 64;
