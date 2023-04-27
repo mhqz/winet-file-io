@@ -27,6 +27,10 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 endif()
 add_compile_options("-Wall")
 
+add_compile_options("-O1")
+add_definitions(-DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN)
+#add_compile_options("-Wa,-mbig-obj")
+
 
 ################################################################################
 project(ouinet)
@@ -34,7 +38,6 @@ project(ouinet)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH})
 include(OuinetDependencies)
-include(ExternalProject)
 #include(BuildVersion)
 
 
