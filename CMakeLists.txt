@@ -31,7 +31,6 @@ add_compile_options("-O1")
 add_definitions(-DBOOST_USE_WINDOWS_H -DWIN32_LEAN_AND_MEAN)
 #add_compile_options("-Wa,-mbig-obj")
 
-
 ################################################################################
 project(ouinet)
 
@@ -42,32 +41,32 @@ include(OuinetDependencies)
 
 
 # This target needs to be linked by all code that includes ouinet headers.
-#add_library(ouinet_base INTERFACE)
-#add_library(ouinet::base ALIAS ouinet_base)
-#target_compile_options(ouinet_base
-#    INTERFACE -std=c++1z
-#)
-#target_include_directories(ouinet_base
-#    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src
-#)
-#target_link_libraries(ouinet_base
-#    INTERFACE
-#        Boost::asio
-#        Boost::boost
-#        Boost::date_time
-#        Boost::filesystem
-#        Boost::program_options
-#        Boost::regex
-#        Boost::system
-#        # generic_stream.h needs openssl headers, but not the library.
-#        OpenSSL::headers
-#)
-#if (WITH_ASAN)
-#    # NOTE: https://stackoverflow.com/a/50163972
-#    target_link_libraries(ouinet_base
-#        INTERFACE -fsanitize=address
-#    )
-#endif()
+add_library(ouinet_base INTERFACE)
+add_library(ouinet::base ALIAS ouinet_base)
+target_compile_options(ouinet_base
+    INTERFACE -std=c++1z
+)
+target_include_directories(ouinet_base
+    INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(ouinet_base
+    INTERFACE
+        Boost::asio
+        Boost::boost
+        Boost::date_time
+        Boost::filesystem
+        Boost::program_options
+        Boost::regex
+        Boost::system
+        # generic_stream.h needs openssl headers, but not the library.
+        #OpenSSL::headers
+)
+if (WITH_ASAN)
+    # NOTE: https://stackoverflow.com/a/50163972
+    target_link_libraries(ouinet_base
+        INTERFACE -fsanitize=address
+    )
+endif()
 
 ###########################################################
 #option(ASIO_UTP_WITH_TESTS             "" OFF)
@@ -87,8 +86,8 @@ include(OuinetDependencies)
 #add_subdirectory(./src/ouiservice/obfs4proxy)
 
 ################################################################################
-#file(GLOB client_sources
-#    "./src/client.cpp"
+file(GLOB client_sources
+    "./src/client.cpp"
 #    "./src/connect_to_host.cpp"
 #    "./src/client_front_end.cpp"
 #    "./src/endpoint.cpp"
@@ -128,10 +127,10 @@ include(OuinetDependencies)
 #    "./src/doh.cpp"
 #    "./src/http_util.cpp"
 #    ${VERSION_CPP}
-#)
+)
 
 #if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Android")
-#    add_executable(client ${client_sources})
+    add_executable(client ${client_sources})
 #else()
 #    add_library(client SHARED ${client_sources})
 #    add_library(ouinet::client ALIAS client)
@@ -139,10 +138,10 @@ include(OuinetDependencies)
 #    target_link_libraries(client PUBLIC ${android_log})
 #endif()
 #
-#target_link_libraries(client
-#    PRIVATE
+target_link_libraries(client
+    PRIVATE
 #        Boost::asio_ssl
-#        Boost::iostreams
+        Boost::iostreams
 #        lib::asio_utp
 #        cpp_upnp
 #        lib::zdnsparser
@@ -153,8 +152,8 @@ include(OuinetDependencies)
 ##        ouinet::lampshade-asio
 #        ouinet::ouiservice-i2p
 ##    PUBLIC
-#        ouinet::base
-#)
+        ouinet::base
+)
 #
 #################################################################################
 #if (WITH_INJECTOR)

@@ -155,27 +155,27 @@ set_target_properties(Boost::boost PROPERTIES
 # boundary, both the library and the program must link asio as a shared library
 # instead. Boost does not ship this library, so we need to create it.
 
-#add_library(boost_asio SHARED "${CMAKE_CURRENT_SOURCE_DIR}/lib/asio.cpp")
-#add_library(Boost::asio ALIAS boost_asio)
-#target_link_libraries(boost_asio
-#    PUBLIC
-#        Boost::boost
-#        Boost::coroutine
-#        Threads::Threads
-#    PRIVATE
-#        Boost::system
-#)
-#target_compile_definitions(boost_asio
-#    PUBLIC
-#        -DBOOST_ASIO_DYN_LINK
-#        # For some reason we need to define both of these
-#        -DBOOST_COROUTINES_NO_DEPRECATION_WARNING
-#        -DBOOST_COROUTINE_NO_DEPRECATION_WARNING
-#)
-#target_compile_options(boost_asio
-#    PUBLIC -std=c++14
-#)
-#
+add_library(boost_asio SHARED "${CMAKE_CURRENT_SOURCE_DIR}/lib/asio.cpp")
+add_library(Boost::asio ALIAS boost_asio)
+target_link_libraries(boost_asio
+    PUBLIC
+        Boost::boost
+        Boost::coroutine
+        Threads::Threads
+    PRIVATE
+        Boost::system
+)
+target_compile_definitions(boost_asio
+    PUBLIC
+        -DBOOST_ASIO_DYN_LINK
+        # For some reason we need to define both of these
+        -DBOOST_COROUTINES_NO_DEPRECATION_WARNING
+        -DBOOST_COROUTINE_NO_DEPRECATION_WARNING
+)
+target_compile_options(boost_asio
+    PUBLIC -std=c++14
+)
+
 #add_library(boost_asio_ssl SHARED "${CMAKE_CURRENT_SOURCE_DIR}/lib/asio_ssl.cpp")
 #add_library(Boost::asio_ssl ALIAS boost_asio_ssl)
 #target_link_libraries(boost_asio_ssl
