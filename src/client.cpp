@@ -21,6 +21,17 @@ last_error() {
     return make_error_code(static_cast<errc::errc_t>(errno));
 }
 
+void
+fseek(random_access_t &file_handle, size_t pos, int origin, sys::error_code& ec)
+{
+    native_handle_t native_handle = file_handle.native_handle();
+    if(INVALID_SET_FILE_POINTER ==  SetFilePointer(native_handle, pos, NULL, origin))
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+    }
+}
+
 random_access_t
 open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
@@ -32,7 +43,7 @@ open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
     }
 
     f.assign(file);
-    //fseek(f, 0, ec);
+    fseek(f, 0, 0, ec);
 
     return f;
 }
