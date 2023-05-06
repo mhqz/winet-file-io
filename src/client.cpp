@@ -50,7 +50,7 @@ open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
 random_access_t
 open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &ec) {
-    HANDLE file = ::CreateFile(reinterpret_cast<LPCSTR>(p.c_str()),
+    HANDLE file = ::CreateFile(p.string().c_str(),
                                GENERIC_READ | GENERIC_WRITE,       // DesiredAccess
                                FILE_SHARE_READ | FILE_SHARE_WRITE, // ShareMode
                                NULL,                  // SecurityAttributes
