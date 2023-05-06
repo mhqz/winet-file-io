@@ -1,9 +1,16 @@
 #include <boost/asio/windows/random_access_handle.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
+
+
+#include "util/signal.h"
 
 #include <windows.h>
 #include <io.h>
 #include <boost/asio/spawn.hpp>
+#include <boost/asio/write_at.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 namespace asio = boost::asio;
 namespace errc = boost::system::errc;
@@ -61,18 +68,40 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
     return open(file, exec, ec);
 }
 
+void write_handler(const sys::error_code& ec, size_t bytes_transferred){
+
+}
+
+void write(random_access_t& f
+        , asio::const_buffer b
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    auto cancel_slot = cancel.connect([&] { f.close(); });
+    sys::error_code ec;
+    asio::async_write_at(f, 0, b,write_handler);
+    return_or_throw_on_error(yield, cancel, ec);
+}
+
 }}}
 
 namespace file_io = ouinet::util::file_io;
+using Cancel = ouinet::Signal<void()>;
 
 int main() {
     asio::io_context ctx;
     sys::error_code ec;
+    Cancel cancel;
 
     asio::spawn(ctx, [&](asio::yield_context yield){
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(5));
+        timer.async_wait(yield);
+
         auto group_name_f = file_io::open_or_create(ctx.get_executor(),
-                                                    "test.txt",
+                                                    "prueba.txt",
                                                     ec);
+        file_io::write(group_name_f, boost::asio::buffer("hola"), cancel, yield);
     });
     ctx.run();
     return 0;
