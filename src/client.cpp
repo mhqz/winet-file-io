@@ -54,6 +54,39 @@ current_position(random_access_t& f, sys::error_code& ec)
     return offset;
 }
 
+size_t
+end_position(random_access_t& f, sys::error_code& ec)
+{
+    native_handle_t native_handle = f.native_handle();
+    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_END);
+    if(INVALID_SET_FILE_POINTER ==  offset)
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return size_t(-1);
+    }
+
+    return offset;
+}
+
+
+//XXX: Improvements are required to avoid code repetition and unify fseek
+// behavior with posix without sacrificing performance in the windows implementation
+size_t
+file_size(random_access_t& f, sys::error_code& ec)
+{
+    auto start_pos = current_position(f, ec);
+    if (ec) return size_t(-1);
+
+    auto end = end_position(f, ec);
+    if (ec) return size_t(-1);
+
+    fseek(f, start_pos, ec);
+    if (ec) return size_t(-1);
+
+    return end;
+}
+
 random_access_t
 open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
@@ -95,21 +128,6 @@ write_at(random_access_t& f
     asio::async_write_at(f, offset, b, [&ec_write](const boost::system::error_code& ec,
                                      std::size_t bytes_transferred){ec_write = std::move(ec);});
     return_or_throw_on_error(yield, cancel, ec_write);
-}
-
-size_t
-end_position(random_access_t& f, sys::error_code& ec)
-{
-    native_handle_t native_handle = f.native_handle();
-    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_END);
-    if(INVALID_SET_FILE_POINTER ==  offset)
-    {
-        ec = last_error();
-        if (!ec) ec = make_error_code(errc::no_message);
-        return size_t(-1);
-    }
-
-    return offset;
 }
 
 void
