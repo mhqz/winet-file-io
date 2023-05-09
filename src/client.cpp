@@ -98,7 +98,7 @@ open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
     }
 
     f.assign(file);
-    fseek(f, 0, 0, ec);
+    fseek(f, 0, ec);
 
     return f;
 }
