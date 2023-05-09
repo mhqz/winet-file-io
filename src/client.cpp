@@ -68,10 +68,6 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
     return open(file, exec, ec);
 }
 
-void write_handler(const sys::error_code& ec, size_t bytes_transferred){
-
-}
-
 void write(random_access_t& f
         , asio::const_buffer b
         , Cancel& cancel
@@ -79,7 +75,9 @@ void write(random_access_t& f
 {
     auto cancel_slot = cancel.connect([&] { f.close(); });
     sys::error_code ec;
-    asio::async_write_at(f, 0, b,write_handler);
+    asio::async_write_at(f, 0, b, [](const boost::system::error_code& ec,
+                                     std::size_t bytes_transferred){});
+
     return_or_throw_on_error(yield, cancel, ec);
 }
 
