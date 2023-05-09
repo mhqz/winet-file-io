@@ -73,6 +73,7 @@ end_position(random_access_t& f, sys::error_code& ec)
 //XXX: Improvements are required to avoid code repetition and unify fseek
 // behavior with posix without sacrificing performance in the windows implementation
 size_t
+//TODO: Add unit tests
 file_size(random_access_t& f, sys::error_code& ec)
 {
     auto start_pos = current_position(f, ec);
@@ -88,6 +89,7 @@ file_size(random_access_t& f, sys::error_code& ec)
 }
 
 size_t
+//TODO: Add unit tests
 file_remaining_size(random_access_t & f, sys::error_code& ec)
 {
     auto size = file_size(f, ec);
@@ -191,6 +193,7 @@ int main() {
     sys::error_code ec;
     Cancel cancel;
 
+    //TODO: Convert into unit tests
     asio::spawn(ctx, [&](asio::yield_context yield){
         asio::steady_timer timer{ctx};
         timer.expires_from_now(std::chrono::seconds(2));
