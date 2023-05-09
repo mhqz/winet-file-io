@@ -245,6 +245,7 @@ write_at_end(random_access_t& f
     return_or_throw_on_error(yield, cancel, ec);
 }
 
+//TODO: Add unit tests
 void
 write(random_access_t& f
             , asio::const_buffer b
@@ -254,6 +255,17 @@ write(random_access_t& f
     write_at_end(f, b, cancel, yield);
 }
 
+
+//TODO: Add unit tests
+void
+remove_file(const fs::path& p)
+{
+    if (!exists(p)) return;
+    assert(is_regular_file(p));
+    if (!is_regular_file(p)) return;
+    sys::error_code ignored_ec;
+    fs::remove(p, ignored_ec);
+}
 
 }}}
 
