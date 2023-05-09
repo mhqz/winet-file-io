@@ -61,7 +61,7 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
                                GENERIC_READ | GENERIC_WRITE,       // DesiredAccess
                                FILE_SHARE_READ | FILE_SHARE_WRITE, // ShareMode
                                NULL,                  // SecurityAttributes
-                               CREATE_ALWAYS,         // CreationDisposition
+                               OPEN_ALWAYS,         // CreationDisposition
                                FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN, // FlagsAndAttributes
                                NULL);                 // TemplateFile
 
