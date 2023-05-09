@@ -166,6 +166,19 @@ HANDLE dup_fd(random_access_t& f, sys::error_code& ec)
     return file;
 }
 
+//TODO: Add unit tests
+void
+truncate(random_access_t& f
+        , size_t new_length
+        , sys::error_code& ec)
+{
+    fseek(f, new_length, ec);
+    if (!::SetEndOfFile(f.native_handle())) {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+    }
+}
+
 void
 write_at(random_access_t& f
         , asio::const_buffer b
