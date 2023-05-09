@@ -147,6 +147,25 @@ open_readonly( const asio::executor& exec
     return open(file, exec, ec);
 }
 
+//TODO: Add unit tests
+//TODO: Adjust the type of lvalues receiving dup_fd
+HANDLE dup_fd(random_access_t& f, sys::error_code& ec)
+{
+    HANDLE file;
+    if(!::DuplicateHandle(
+            ::GetCurrentProcess(),
+            f.native_handle(),
+            ::GetCurrentProcess(),
+            &file,
+            0,
+            FALSE,
+            DUPLICATE_SAME_ACCESS)){
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+    }
+    return file;
+}
+
 void
 write_at(random_access_t& f
         , asio::const_buffer b
