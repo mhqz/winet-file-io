@@ -10,6 +10,7 @@
 #include <io.h>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/write_at.hpp>
+#include <boost/asio/read_at.hpp>
 #include <boost/asio/steady_timer.hpp>
 
 namespace asio = boost::asio;
@@ -205,6 +206,18 @@ check_or_create_directory(const fs::path& dir, sys::error_code& ec)
     }
 }
 
+//TODO: Add unit tests
+void
+read(random_access_t& f
+        , asio::mutable_buffer b
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    auto cancel_slot = cancel.connect([&] { f.close(); });
+    sys::error_code ec;
+    asio::async_read_at(f, 0, b, yield[ec]);
+    return_or_throw_on_error(yield, cancel, ec);
+}
 
 void
 write_at(random_access_t& f
