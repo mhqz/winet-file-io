@@ -29,10 +29,10 @@ last_error() {
 }
 
 void
-fseek(random_access_t &file_handle, size_t pos, int origin, sys::error_code& ec)
+fseek(random_access_t &file_handle, size_t pos, sys::error_code& ec)
 {
     native_handle_t native_handle = file_handle.native_handle();
-    if(INVALID_SET_FILE_POINTER ==  SetFilePointer(native_handle, pos, NULL, origin))
+    if(INVALID_SET_FILE_POINTER ==  SetFilePointer(native_handle, pos, NULL, FILE_BEGIN))
     {
         ec = last_error();
         if (!ec) ec = make_error_code(errc::no_message);
