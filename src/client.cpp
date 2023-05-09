@@ -128,6 +128,23 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
     return open(file, exec, ec);
 }
 
+//XXX: Avoid code repetition on open_or_create
+//TODO: Add unit tests
+random_access_t
+open_readonly( const asio::executor& exec
+        , const fs::path& p
+        , sys::error_code& ec)
+{
+    HANDLE file = ::CreateFile(p.string().c_str(),
+                               GENERIC_READ,        // DesiredAccess
+                               FILE_SHARE_READ,     // ShareMode
+                               NULL,                // SecurityAttributes
+                               OPEN_ALWAYS,         // CreationDisposition
+                               FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_READONLY, // FlagsAndAttributes
+                               NULL);               // TemplateFile
+    return open(file, exec, ec);
+}
+
 void
 write_at(random_access_t& f
         , asio::const_buffer b
