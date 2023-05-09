@@ -87,6 +87,18 @@ file_size(random_access_t& f, sys::error_code& ec)
     return end;
 }
 
+size_t
+file_remaining_size(random_access_t & f, sys::error_code& ec)
+{
+    auto size = file_size(f, ec);
+    if (ec) return 0;
+
+    auto pos = current_position(f, ec);
+    if (ec) return 0;
+
+    return size - pos;
+}
+
 random_access_t
 open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
