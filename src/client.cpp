@@ -39,6 +39,21 @@ fseek(random_access_t &file_handle, size_t pos, int origin, sys::error_code& ec)
     }
 }
 
+size_t
+current_position(random_access_t& f, sys::error_code& ec)
+{
+    native_handle_t native_handle = f.native_handle();
+    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_CURRENT);
+    if(INVALID_SET_FILE_POINTER ==  offset)
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return size_t(-1);
+    }
+
+    return offset;
+}
+
 random_access_t
 open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
@@ -68,18 +83,56 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
     return open(file, exec, ec);
 }
 
-void write(random_access_t& f
+void
+write_at(random_access_t& f
         , asio::const_buffer b
+        , uint64_t offset
         , Cancel& cancel
         , asio::yield_context yield)
 {
     auto cancel_slot = cancel.connect([&] { f.close(); });
-    sys::error_code ec;
-    asio::async_write_at(f, 0, b, [](const boost::system::error_code& ec,
-                                     std::size_t bytes_transferred){});
+    sys::error_code ec_write;
+    asio::async_write_at(f, offset, b, [&ec_write](const boost::system::error_code& ec,
+                                     std::size_t bytes_transferred){ec_write = std::move(ec);});
+    return_or_throw_on_error(yield, cancel, ec_write);
+}
 
+size_t
+end_position(random_access_t& f, sys::error_code& ec)
+{
+    native_handle_t native_handle = f.native_handle();
+    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_END);
+    if(INVALID_SET_FILE_POINTER ==  offset)
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return size_t(-1);
+    }
+
+    return offset;
+}
+
+void
+write_at_end(random_access_t& f
+        , asio::const_buffer b
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    sys::error_code ec;
+    uint64_t offset = end_position(f, ec);
+    write_at(f, b, offset, cancel, yield);
     return_or_throw_on_error(yield, cancel, ec);
 }
+
+void
+write(random_access_t& f
+            , asio::const_buffer b
+            , Cancel& cancel
+            , asio::yield_context yield)
+{
+    write_at_end(f, b, cancel, yield);
+}
+
 
 }}}
 
@@ -93,13 +146,17 @@ int main() {
 
     asio::spawn(ctx, [&](asio::yield_context yield){
         asio::steady_timer timer{ctx};
-        timer.expires_from_now(std::chrono::seconds(5));
+        timer.expires_from_now(std::chrono::seconds(2));
         timer.async_wait(yield);
 
         auto group_name_f = file_io::open_or_create(ctx.get_executor(),
                                                     "prueba.txt",
                                                     ec);
+
+        file_io::write(group_name_f, boost::asio::buffer(" "), cancel, yield);
         file_io::write(group_name_f, boost::asio::buffer("hola"), cancel, yield);
+        file_io::write(group_name_f, boost::asio::buffer(" "), cancel, yield);
+        file_io::write(group_name_f, boost::asio::buffer("mundo"), cancel, yield);
     });
     ctx.run();
     return 0;
