@@ -267,6 +267,31 @@ remove_file(const fs::path& p)
     fs::remove(p, ignored_ec);
 }
 
+//TODO: Add unit tests
+template<typename T>
+T read_number( random_access_t& f
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    T num;
+    sys::error_code ec;
+    // TODO: endianness? (also for writing)
+    read(f, asio::buffer(&num, sizeof(num)), cancel, yield[ec]);
+    return or_throw<T>(yield, ec, std::move(num));
+}
+
+template<typename T>
+void write_number( random_access_t& f
+        , T num
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    sys::error_code ec;
+    // TODO: endianness? (also for reading)
+    write(f, asio::buffer(&num, sizeof(num)), cancel, yield[ec]);
+    return or_throw(yield, ec);
+}
+
 }}}
 
 namespace file_io = ouinet::util::file_io;
