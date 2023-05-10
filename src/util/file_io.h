@@ -14,8 +14,10 @@
 
 #ifdef _WIN32
 using async_file_handle = boost::asio::windows::random_access_handle;
+using native_handle_t = HANDLE;
 #else
 using async_file_handle = boost::asio::posix::stream_descriptor;
+using native_handle_t = int;
 #endif
 
 namespace ouinet { namespace util { namespace file_io {
@@ -30,7 +32,7 @@ open_readonly(const asio::executor&, const fs::path&, sys::error_code&);
 // The descriptor shares offset and flags with that of the original file,
 // but it stays open regardless of the original one getting closed,
 // so it must be closed separately.
-int dup_fd(async_file_handle&, sys::error_code&);
+native_handle_t dup_fd(async_file_handle&, sys::error_code&);
 
 void fseek(async_file_handle&, size_t pos, sys::error_code&);
 
