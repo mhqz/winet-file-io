@@ -3,18 +3,6 @@
 
 #include "file_io.h"
 
-#ifdef _WIN32
-#include <boost/asio/windows/random_access_handle.hpp>
-#else
-#include <boost/asio/posix/stream_descriptor.hpp>
-#endif
-
-#ifdef _WIN32
-using async_file_handle = boost::asio::windows::random_access_handle;
-#else
-using async_file_handle = boost::asio::posix::stream_descriptor;
-#endif
-
 namespace ouinet { namespace util { namespace file_io {
 
 namespace errc = boost::system::errc;
