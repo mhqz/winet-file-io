@@ -1,5 +1,6 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/write_at.hpp>
 
 #include "file_io.h"
 
@@ -13,14 +14,110 @@ sys::error_code last_error()
     return make_error_code(static_cast<errc::errc_t>(errno));
 }
 
-void fseek(async_file_handle& f, size_t pos, sys::error_code& ec)
+bool
+fseek_native(async_file_handle& file_handle, size_t pos) {
+    native_handle_t native_handle = file_handle.native_handle();
+    bool success;
+#ifdef _WIN32
+    success = INVALID_SET_FILE_POINTER !=  SetFilePointer(native_handle, pos, NULL, FILE_BEGIN);
+#else
+    success = lseek(native_handle.fdFile, pos, SEEK_SET) != -1;
+#endif
+    return success;
+}
+
+void
+fseek(async_file_handle &file_handle, size_t pos, sys::error_code& ec)
 {
-    if (lseek(f.native_handle().fdFile, pos, SEEK_SET) == -1) {
+    if(!fseek_native(file_handle, pos))
+    {
         ec = last_error();
         if (!ec) ec = make_error_code(errc::no_message);
     }
 }
 
+size_t
+end_position(async_file_handle& f, sys::error_code& ec)
+{
+    native_handle_t native_handle = f.native_handle();
+    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_END);
+    if(INVALID_SET_FILE_POINTER ==  offset)
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return size_t(-1);
+    }
+
+    return offset;
+}
+
+async_file_handle
+open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
+
+    async_file_handle f = async_file_handle(exec);
+    if (file == INVALID_HANDLE_VALUE) {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return f;
+    }
+
+    f.assign(file);
+    fseek(f, 0, ec);
+
+    return f;
+}
+
+async_file_handle
+open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &ec) {
+    HANDLE file = ::CreateFile(p.string().c_str(),
+                               GENERIC_READ | GENERIC_WRITE,       // DesiredAccess
+                               FILE_SHARE_READ | FILE_SHARE_WRITE, // ShareMode
+                               NULL,                  // SecurityAttributes
+                               OPEN_ALWAYS,         // CreationDisposition
+                               FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN, // FlagsAndAttributes
+                               NULL);                 // TemplateFile
+
+    return open(file, exec, ec);
+}
+
+void
+write_at(async_file_handle& f
+        , asio::const_buffer b
+        , uint64_t offset
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    auto cancel_slot = cancel.connect([&] { f.close(); });
+    sys::error_code ec_write;
+    asio::async_write_at(f, offset, b, [&ec_write](const boost::system::error_code& ec,
+                                                   std::size_t bytes_transferred){ec_write = std::move(ec);});
+    return_or_throw_on_error(yield, cancel, ec_write);
+}
+
+void
+write_at_end(async_file_handle& f
+        , asio::const_buffer b
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    sys::error_code ec;
+    uint64_t offset = end_position(f, ec);
+    write_at(f, b, offset, cancel, yield);
+    return_or_throw_on_error(yield, cancel, ec);
+}
+
+//TODO: Add unit tests
+void
+write(async_file_handle& f
+        , asio::const_buffer b
+        , Cancel& cancel
+        , asio::yield_context yield)
+{
+    write_at_end(f, b, cancel, yield);
+}
+
+
+/***
 size_t current_position(async_file_handle& f, sys::error_code& ec)
 {
     off_t offset = lseek(f.native_handle(), 0, SEEK_CUR);
@@ -171,5 +268,7 @@ void remove_file(const fs::path& p)
     sys::error_code ignored_ec;
     fs::remove(p, ignored_ec);
 }
+
+***/
 
 }}} // namespaces
