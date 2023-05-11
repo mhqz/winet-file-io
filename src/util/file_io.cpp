@@ -6,7 +6,6 @@
 namespace ouinet { namespace util { namespace file_io {
 
 namespace errc = boost::system::errc;
-namespace windows = asio::windows;
 
 static
 sys::error_code last_error()
