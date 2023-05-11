@@ -22,7 +22,7 @@ namespace windows = asio::windows;
 using random_access_t = asio::windows::random_access_handle;
 using native_handle_t = HANDLE;
 
-namespace ouinet { namespace util { namespace file_io {
+namespace ouinet { namespace util { namespace file_io_tmp {
 
 sys::error_code
 last_error() {
@@ -294,7 +294,7 @@ void write_number( random_access_t& f
 
 }}}
 
-namespace file_io = ouinet::util::file_io;
+namespace file_io = ouinet::util::file_io_tmp;
 using Cancel = ouinet::Signal<void()>;
 
 int main() {
