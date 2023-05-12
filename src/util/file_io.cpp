@@ -14,18 +14,6 @@ sys::error_code last_error()
     return make_error_code(static_cast<errc::errc_t>(errno));
 }
 
-bool
-fseek_native(async_file_handle& file_handle, size_t pos) {
-    native_handle_t native_handle = file_handle.native_handle();
-    bool success;
-#ifdef _WIN32
-    success = INVALID_SET_FILE_POINTER !=  SetFilePointer(native_handle, pos, NULL, FILE_BEGIN);
-#else
-    success = lseek(native_handle.fdFile, pos, SEEK_SET) != -1;
-#endif
-    return success;
-}
-
 void
 fseek(async_file_handle &file_handle, size_t pos, sys::error_code& ec)
 {
@@ -34,6 +22,15 @@ fseek(async_file_handle &file_handle, size_t pos, sys::error_code& ec)
         ec = last_error();
         if (!ec) ec = make_error_code(errc::no_message);
     }
+}
+
+#ifdef _WIN32
+bool
+fseek_native(async_file_handle& file_handle, size_t pos) {
+    native_handle_t native_handle = file_handle.native_handle();
+    bool success;
+    success = INVALID_SET_FILE_POINTER !=  SetFilePointer(native_handle, pos, NULL, FILE_BEGIN);
+    return success;
 }
 
 size_t
@@ -116,6 +113,7 @@ write(async_file_handle& f
     write_at_end(f, b, cancel, yield);
 }
 
+#endif
 
 /***
 size_t current_position(async_file_handle& f, sys::error_code& ec)

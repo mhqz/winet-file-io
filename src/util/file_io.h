@@ -36,6 +36,8 @@ native_handle_t dup_fd(async_file_handle&, sys::error_code&);
 
 void fseek(async_file_handle&, size_t pos, sys::error_code&);
 
+bool fseek_native(async_file_handle&, size_t pos);
+
 size_t current_position(async_file_handle&, sys::error_code&);
 
 size_t end_position(async_file_handle& f, sys::error_code& ec);
