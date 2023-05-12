@@ -11,26 +11,37 @@ namespace file_io = ouinet::util::file_io;
 
 using Cancel = ouinet::Signal<void()>;
 
+BOOST_AUTO_TEST_SUITE(test_file_io);
+
+std::string testId(){
+    std::time_t now = std::time(nullptr);
+    char testCycleId[32];
+    std::string dateTimeFormat = "%Y%m%d-%H%M%S-test-file-io";
+    std::strftime(testCycleId,
+                  32,
+                  dateTimeFormat.c_str(),
+                  std::gmtime(&now));
+    return testCycleId;
+}
+
 BOOST_AUTO_TEST_CASE(test_open_or_create)
 {
     asio::io_context ctx;
     sys::error_code ec;
     Cancel cancel;
-
-    std::time_t now = std::time(nullptr);
-    char testCycleId[32];
-    std::strftime(testCycleId, 32, "%Y%m%d-%H%M%S-test-file-io", std::gmtime(&now));
+    std::string fileName = testId();
 
     asio::spawn(ctx, [&](asio::yield_context yield){
         asio::steady_timer timer{ctx};
         timer.expires_from_now(std::chrono::seconds(2));
         timer.async_wait(yield);
-
         async_file_handle testFile = file_io::open_or_create(ctx.get_executor(),
-                                                             testCycleId,
+                                                             fileName,
                                                              ec);
     });
     ctx.run();
 
-    BOOST_TEST(boost::filesystem::exists(testCycleId));
+    BOOST_TEST(boost::filesystem::exists(fileName));
 }
+
+BOOST_AUTO_TEST_SUITE_END();
