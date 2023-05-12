@@ -13,9 +13,6 @@ using Cancel = ouinet::Signal<void()>;
 
 struct ts_fixture {
     std::string testId;
-    asio::io_context ctx;
-    sys::error_code ec;
-    Cancel cancel;
 
     ts_fixture() {
         testId = genTestCycleID();
@@ -53,19 +50,33 @@ struct ts_fixture {
 
 };
 
-BOOST_FIXTURE_TEST_SUITE(test_file_io, ts_fixture);
+struct file_io_fixture:ts_fixture
+{
+    asio::io_context ctx;
+    sys::error_code ec;
+    size_t default_timer = 2;
+    Cancel cancel;
 
-BOOST_AUTO_TEST_CASE(test_open_or_create)
+    void spawn_open_or_create(TempFile& tempFile){
+        asio::spawn(ctx, [&](asio::yield_context yield){
+            asio::steady_timer timer{ctx};
+            timer.expires_from_now(std::chrono::seconds(default_timer));
+            timer.async_wait(yield);
+            auto aio_file = file_io::open_or_create(
+                    ctx.get_executor(),
+                    tempFile.getName(),
+                    ec);
+            file_io::write(aio_file, boost::asio::buffer(testId), cancel, yield);
+        });
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(test_file_io, file_io_fixture);
+
+BOOST_AUTO_TEST_CASE(test_open_or_create_and_write)
 {
     TempFile tempFile{testId};
-    asio::spawn(ctx, [&](asio::yield_context yield){
-        asio::steady_timer timer{ctx};
-        timer.expires_from_now(std::chrono::seconds(2));
-        timer.async_wait(yield);
-        file_io::open_or_create(ctx.get_executor(),
-                                tempFile.getName(),
-                                ec);
-    });
+    spawn_open_or_create(tempFile);
     ctx.run();
     BOOST_TEST(boost::filesystem::exists(tempFile.getName()));
 }
