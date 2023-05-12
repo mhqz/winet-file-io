@@ -33,24 +33,41 @@ struct ts_fixture {
                       std::gmtime(&now));
         return testCycleId;
     }
+
+    struct TempFile {
+        public:
+            TempFile(std::string fileName){
+                name = fileName;
+            }
+            ~TempFile(){
+                if (boost::filesystem::exists(name)){
+                    boost::filesystem::remove(name);
+                }
+            }
+            std::string getName(){
+               return name;
+            }
+        private:
+            std::string name;
+    };
+
 };
 
 BOOST_FIXTURE_TEST_SUITE(test_file_io, ts_fixture);
 
 BOOST_AUTO_TEST_CASE(test_open_or_create)
 {
-    std::string fileName = testId;
+    TempFile tempFile{testId};
     asio::spawn(ctx, [&](asio::yield_context yield){
         asio::steady_timer timer{ctx};
         timer.expires_from_now(std::chrono::seconds(2));
         timer.async_wait(yield);
         file_io::open_or_create(ctx.get_executor(),
-                                fileName,
+                                tempFile.getName(),
                                 ec);
     });
     ctx.run();
-
-    BOOST_TEST(boost::filesystem::exists(fileName));
+    BOOST_TEST(boost::filesystem::exists(tempFile.getName()));
 }
 
 BOOST_AUTO_TEST_SUITE_END();
