@@ -38,17 +38,17 @@ struct fixture_base {
         return testSuiteId;
     }
 
-    struct TempFile {
+    struct temp_file {
         public:
-            TempFile(std::string fileName){
+            temp_file(std::string fileName){
                 name = fileName;
             }
-            ~TempFile(){
+            ~temp_file(){
                 if (boost::filesystem::exists(name)){
                     boost::filesystem::remove(name);
                 }
             }
-            std::string getName(){
+            std::string get_name(){
                return name;
             }
         private:
@@ -64,26 +64,26 @@ struct fixture_file_io:fixture_base
     size_t default_timer = 2;
     Cancel cancel;
 
-    void spawn_open_or_create(TempFile& tempFile){
+    void spawn_open_or_create(temp_file& temp_file){
         asio::spawn(ctx, [&](asio::yield_context yield){
             asio::steady_timer timer{ctx};
             timer.expires_from_now(std::chrono::seconds(default_timer));
             timer.async_wait(yield);
             auto aio_file = file_io::open_or_create(
                     ctx.get_executor(),
-                    tempFile.getName(),
+                    temp_file.get_name(),
                     ec);
         });
     }
 
-    void spawn_write(TempFile& tempFile) {
+    void spawn_write(temp_file& temp_file) {
         asio::spawn(ctx, [&](asio::yield_context yield) {
             asio::steady_timer timer{ctx};
             timer.expires_from_now(std::chrono::seconds(default_timer));
             timer.async_wait(yield);
             async_file_handle aio_file = file_io::open_or_create(
                     ctx.get_executor(),
-                    tempFile.getName(),
+                    temp_file.get_name(),
                     ec);
             file_io::write(aio_file, boost::asio::buffer(suite_id), cancel, yield);
         });
@@ -94,19 +94,19 @@ BOOST_FIXTURE_TEST_SUITE(suite_file_io, fixture_file_io);
 
 BOOST_AUTO_TEST_CASE(test_open_or_create)
 {
-    TempFile tempFile{test_id};
-    spawn_open_or_create(tempFile);
+    temp_file temp_file{test_id};
+    spawn_open_or_create(temp_file);
     ctx.run();
-    BOOST_TEST(boost::filesystem::exists(tempFile.getName()));
+    BOOST_TEST(boost::filesystem::exists(temp_file.get_name()));
 }
 
 //BOOST_AUTO_TEST_CASE(test_write, ut::depends_on("file_io_suite/test_open_or_create"))
 BOOST_AUTO_TEST_CASE(test_write)
 {
-    TempFile tempFile{test_id};
-    spawn_write(tempFile);
+    temp_file temp_file{test_id};
+    spawn_write(temp_file);
     ctx.run();
-    BOOST_REQUIRE(boost::filesystem::exists(tempFile.getName()));
+    BOOST_REQUIRE(boost::filesystem::exists(temp_file.get_name()));
 }
 
 BOOST_AUTO_TEST_SUITE_END();
