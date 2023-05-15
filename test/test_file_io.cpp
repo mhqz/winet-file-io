@@ -6,7 +6,8 @@
 #include "util/file_io.h"
 
 namespace asio = boost::asio;
-namespace sys   = boost::system;
+namespace sys = boost::system;
+namespace ut = boost::unit_test;
 namespace file_io = ouinet::util::file_io;
 
 using Cancel = ouinet::Signal<void()>;
@@ -66,19 +67,40 @@ struct file_io_fixture:ts_fixture
                     ctx.get_executor(),
                     tempFile.getName(),
                     ec);
+        });
+    }
+
+    void spawn_write(TempFile& tempFile) {
+        asio::spawn(ctx, [&](asio::yield_context yield) {
+            asio::steady_timer timer{ctx};
+            timer.expires_from_now(std::chrono::seconds(default_timer));
+            timer.async_wait(yield);
+            async_file_handle aio_file = file_io::open_or_create(
+                    ctx.get_executor(),
+                    tempFile.getName(),
+                    ec);
             file_io::write(aio_file, boost::asio::buffer(testId), cancel, yield);
         });
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(test_file_io, file_io_fixture);
+BOOST_FIXTURE_TEST_SUITE(file_io_suite, file_io_fixture);
 
-BOOST_AUTO_TEST_CASE(test_open_or_create_and_write)
+BOOST_AUTO_TEST_CASE(test_open_or_create)
 {
-    TempFile tempFile{testId};
+    TempFile tempFile{testId + "_test_open_or_create"};
     spawn_open_or_create(tempFile);
     ctx.run();
     BOOST_TEST(boost::filesystem::exists(tempFile.getName()));
+}
+
+//BOOST_AUTO_TEST_CASE(test_write, ut::depends_on("file_io_suite/test_open_or_create"))
+BOOST_AUTO_TEST_CASE(test_write)
+{
+    TempFile tempFile{testId + "_test_write"};
+    spawn_write(tempFile);
+    ctx.run();
+    BOOST_REQUIRE(boost::filesystem::exists(tempFile.getName()));
 }
 
 BOOST_AUTO_TEST_SUITE_END();
