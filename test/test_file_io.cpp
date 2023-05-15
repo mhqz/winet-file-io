@@ -19,20 +19,22 @@ struct fixture_base {
     std::string suite_id;
 
     fixture_base() {
+        auto date_time = get_date_time();
         test_name = ut::framework::current_test_case().p_name;
         suite_name = ut::framework::get<ut::test_suite>(ut::framework::current_test_case().p_parent_id).p_name;
-        suite_id = generate_suite_id();
+        suite_id = date_time + "_" + suite_name;
         test_id = suite_id + "_" + test_name;
     }
     ~fixture_base(){
     }
 
-    std::string generate_suite_id(){
+    std::string get_date_time(){
+        size_t buffer_size = 32;
         std::time_t now = std::time(nullptr);
-        char testSuiteId[32];
-        std::string dateTimeFormat = "%Y%m%d-%H%M%S_" + suite_name;
+        char testSuiteId[buffer_size];
+        std::string dateTimeFormat = "%Y%m%d-%H%M%S";
         std::strftime(testSuiteId,
-                      32,
+                      buffer_size,
                       dateTimeFormat.c_str(),
                       std::gmtime(&now));
         return testSuiteId;
