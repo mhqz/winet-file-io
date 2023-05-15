@@ -1,3 +1,4 @@
 cmake-build-debug
 cmake-build-mingw
+cmake-build-mingw-coverage
 .idea
