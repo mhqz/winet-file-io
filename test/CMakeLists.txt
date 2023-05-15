@@ -8,4 +8,5 @@ link_libraries(
 
 add_executable(test_file_io
     "test_file_io.cpp"
-    "../src/util/file_io.cpp")
+    "../src/util/file_io.cpp"
+    "util/base_fixture.hpp")
