@@ -12,24 +12,30 @@ namespace file_io = ouinet::util::file_io;
 
 using Cancel = ouinet::Signal<void()>;
 
-struct ts_fixture {
-    std::string testId;
+struct fixture_base {
+    std::string test_name;
+    std::string suite_name;
+    std::string test_id;
+    std::string suite_id;
 
-    ts_fixture() {
-        testId = genTestCycleID();
+    fixture_base() {
+        test_name = ut::framework::current_test_case().p_name;
+        suite_name = ut::framework::get<ut::test_suite>(ut::framework::current_test_case().p_parent_id).p_name;
+        suite_id = generate_suite_id();
+        test_id = suite_id + "_" + test_name;
     }
-    ~ts_fixture(){
+    ~fixture_base(){
     }
 
-    std::string genTestCycleID(){
+    std::string generate_suite_id(){
         std::time_t now = std::time(nullptr);
-        char testCycleId[32];
-        std::string dateTimeFormat = "%Y%m%d-%H%M%S-test-file-io";
-        std::strftime(testCycleId,
+        char testSuiteId[32];
+        std::string dateTimeFormat = "%Y%m%d-%H%M%S_" + suite_name;
+        std::strftime(testSuiteId,
                       32,
                       dateTimeFormat.c_str(),
                       std::gmtime(&now));
-        return testCycleId;
+        return testSuiteId;
     }
 
     struct TempFile {
@@ -51,7 +57,7 @@ struct ts_fixture {
 
 };
 
-struct file_io_fixture:ts_fixture
+struct fixture_file_io:fixture_base
 {
     asio::io_context ctx;
     sys::error_code ec;
@@ -79,16 +85,16 @@ struct file_io_fixture:ts_fixture
                     ctx.get_executor(),
                     tempFile.getName(),
                     ec);
-            file_io::write(aio_file, boost::asio::buffer(testId), cancel, yield);
+            file_io::write(aio_file, boost::asio::buffer(suite_id), cancel, yield);
         });
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(file_io_suite, file_io_fixture);
+BOOST_FIXTURE_TEST_SUITE(suite_file_io, fixture_file_io);
 
 BOOST_AUTO_TEST_CASE(test_open_or_create)
 {
-    TempFile tempFile{testId + "_test_open_or_create"};
+    TempFile tempFile{test_id};
     spawn_open_or_create(tempFile);
     ctx.run();
     BOOST_TEST(boost::filesystem::exists(tempFile.getName()));
@@ -97,7 +103,7 @@ BOOST_AUTO_TEST_CASE(test_open_or_create)
 //BOOST_AUTO_TEST_CASE(test_write, ut::depends_on("file_io_suite/test_open_or_create"))
 BOOST_AUTO_TEST_CASE(test_write)
 {
-    TempFile tempFile{testId + "_test_write"};
+    TempFile tempFile{test_id};
     spawn_write(tempFile);
     ctx.run();
     BOOST_REQUIRE(boost::filesystem::exists(tempFile.getName()));
