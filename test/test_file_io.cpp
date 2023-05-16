@@ -32,7 +32,7 @@ struct fixture_file_io:fixture_base
         });
     }
 
-    void spawn_write(temp_file& temp_file) {
+    void spawn_write(temp_file& temp_file, std::string content) {
         asio::spawn(ctx, [&](asio::yield_context yield) {
             asio::steady_timer timer{ctx};
             timer.expires_from_now(std::chrono::seconds(default_timer));
@@ -41,7 +41,7 @@ struct fixture_file_io:fixture_base
                     ctx.get_executor(),
                     temp_file.get_name(),
                     ec);
-            file_io::write(aio_file, boost::asio::buffer(suite_id), cancel, yield);
+            file_io::write(aio_file, boost::asio::buffer(content), cancel, yield);
         });
     }
 };
@@ -58,8 +58,9 @@ BOOST_AUTO_TEST_CASE(test_open_or_create)
 
 BOOST_AUTO_TEST_CASE(test_write, * ut::depends_on("suite_file_io/test_open_or_create"))
 {
+    std::string expected_string = test_id;
     temp_file temp_file{test_id};
-    spawn_write(temp_file);
+    spawn_write(temp_file, expected_string);
     ctx.run();
     BOOST_REQUIRE(boost::filesystem::exists(temp_file.get_name()));
 }
