@@ -63,6 +63,11 @@ BOOST_AUTO_TEST_CASE(test_write, * ut::depends_on("suite_file_io/test_open_or_cr
     spawn_write(temp_file, expected_string);
     ctx.run();
     BOOST_REQUIRE(boost::filesystem::exists(temp_file.get_name()));
+    if (std::ifstream input{temp_file.get_name()} ) {
+        std::string current_string;
+        input >> current_string;
+        BOOST_TEST(expected_string == current_string);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END();
