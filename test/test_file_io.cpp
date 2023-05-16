@@ -56,8 +56,7 @@ BOOST_AUTO_TEST_CASE(test_open_or_create)
     BOOST_TEST(boost::filesystem::exists(temp_file.get_name()));
 }
 
-//BOOST_AUTO_TEST_CASE(test_write, ut::depends_on("file_io_suite/test_open_or_create"))
-BOOST_AUTO_TEST_CASE(test_write)
+BOOST_AUTO_TEST_CASE(test_write, * ut::depends_on("suite_file_io/test_open_or_create"))
 {
     temp_file temp_file{test_id};
     spawn_write(temp_file);
