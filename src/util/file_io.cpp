@@ -15,7 +15,7 @@ sys::error_code last_error()
 }
 
 void
-fseek(async_file_handle &file_handle, size_t pos, sys::error_code& ec)
+fseek(async_file_handle& file_handle, size_t pos, sys::error_code& ec)
 {
     if(!fseek_native(file_handle, pos))
     {
@@ -31,6 +31,21 @@ fseek_native(async_file_handle& file_handle, size_t pos) {
     bool success;
     success = INVALID_SET_FILE_POINTER !=  SetFilePointer(native_handle, pos, NULL, FILE_BEGIN);
     return success;
+}
+
+size_t
+current_position(async_file_handle& f, sys::error_code& ec)
+{
+    native_handle_t native_handle = f.native_handle();
+    auto offset = SetFilePointer(native_handle, 0, NULL, FILE_CURRENT);
+    if(INVALID_SET_FILE_POINTER ==  offset)
+    {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+        return size_t(-1);
+    }
+
+    return offset;
 }
 
 size_t

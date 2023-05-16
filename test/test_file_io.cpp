@@ -40,7 +40,7 @@ ctx.run();
     BOOST_TEST(boost::filesystem::exists(temp_file.get_name()));
 }
 
-BOOST_AUTO_TEST_CASE(test_cursor_at_end, * ut::depends_on("suite_file_io/test_open_or_create"))
+BOOST_AUTO_TEST_CASE(test_cursor_position, * ut::depends_on("suite_file_io/test_open_or_create"))
 {
     std::string expected_string = "0123456789";
     size_t expected_position = expected_string.size();
@@ -64,7 +64,13 @@ BOOST_AUTO_TEST_CASE(test_cursor_at_end, * ut::depends_on("suite_file_io/test_op
                 ctx.get_executor(),
                 temp_file.get_name(),
                 ec);
+
         size_t current_position = file_io::end_position(aio_file, ec);
+        BOOST_TEST(expected_position == current_position);
+
+        expected_position = 7;
+        file_io::fseek(aio_file, expected_position, ec);
+        current_position = file_io::current_position(aio_file, ec);
         BOOST_TEST(expected_position == current_position);
     });
     ctx.run();
