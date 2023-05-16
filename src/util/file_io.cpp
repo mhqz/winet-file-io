@@ -103,7 +103,6 @@ write_at_end(async_file_handle& f
     return_or_throw_on_error(yield, cancel, ec);
 }
 
-//TODO: Add unit tests
 void
 write(async_file_handle& f
         , asio::const_buffer b
