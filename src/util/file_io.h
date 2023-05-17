@@ -60,7 +60,13 @@ void write( async_file_handle&
           , Cancel&
           , asio::yield_context);
 
-// Check whether the directory exists, if not, try to create it.
+void write_at( async_file_handle&
+             , asio::const_buffer
+             , uint64_t
+             , Cancel&
+             , asio::yield_context);
+
+            // Check whether the directory exists, if not, try to create it.
 // If the directory doesn't exist nor it can be created, the error
 // code is set. Returns true if the directory has been created.
 bool check_or_create_directory(const fs::path&, sys::error_code&);
