@@ -113,4 +113,35 @@ BOOST_AUTO_TEST_CASE(test_async_write)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_read_only_operations)
+{
+    temp_file temp_file{test_id};
+    std::string expected_string("ABC123xyz");
+    std::string data_in(expected_string.size(), '\0');
+
+    asio::spawn(ctx, [&](asio::yield_context yield) {
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+
+        // Create test file and close it
+        async_file_handle aio_file_rw = file_io::open_or_create(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+        file_io::write(aio_file_rw, boost::asio::const_buffer("ABC123xyz", 9), cancel, yield);
+        aio_file_rw.close();
+
+        // Open the file again in read-only mode
+        timer.async_wait(yield);
+        async_file_handle aio_file_ro = file_io::open_readonly(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+
+        file_io::read(aio_file_ro, asio::buffer(data_in), cancel, yield);
+        BOOST_TEST(expected_string == data_in);
+    });
+    ctx.run();
+}
+
 BOOST_AUTO_TEST_SUITE_END();

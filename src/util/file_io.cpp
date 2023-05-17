@@ -1,4 +1,5 @@
 #include <boost/asio/read.hpp>
+#include <boost/asio/read_at.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/write_at.hpp>
 
@@ -120,6 +121,18 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
 }
 
 void
+read(async_file_handle& f
+    , asio::mutable_buffer b
+    , Cancel& cancel
+    , asio::yield_context yield)
+{
+    auto cancel_slot = cancel.connect([&] { f.close(); });
+    sys::error_code ec;
+    asio::async_read_at(f, 0, b, yield[ec]);
+    return_or_throw_on_error(yield, cancel, ec);
+}
+
+void
 write_at(async_file_handle& f
         , asio::const_buffer b
         , uint64_t offset
@@ -152,6 +165,21 @@ write(async_file_handle& f
         , asio::yield_context yield)
 {
     write_at_end(f, b, cancel, yield);
+}
+
+async_file_handle
+open_readonly( const asio::executor& exec
+        , const fs::path& p
+        , sys::error_code& ec)
+{
+    HANDLE file = ::CreateFile(p.string().c_str(),
+                               GENERIC_READ,        // DesiredAccess
+                               FILE_SHARE_READ,     // ShareMode
+                               NULL,                // SecurityAttributes
+                               OPEN_ALWAYS,         // CreationDisposition
+                               FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_READONLY, // FlagsAndAttributes
+                               NULL);               // TemplateFile
+    return open(file, exec, ec);
 }
 
 #endif
