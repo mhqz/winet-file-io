@@ -63,6 +63,21 @@ end_position(async_file_handle& f, sys::error_code& ec)
     return offset;
 }
 
+size_t
+file_size(async_file_handle& f, sys::error_code& ec)
+{
+    auto start_pos = current_position(f, ec);
+    if (ec) return size_t(-1);
+
+    auto end = end_position(f, ec);
+    if (ec) return size_t(-1);
+
+    fseek(f, start_pos, ec);
+    if (ec) return size_t(-1);
+
+    return end;
+}
+
 async_file_handle
 open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 

@@ -74,7 +74,6 @@ end_position(random_access_t& f, sys::error_code& ec)
 //XXX: Improvements are required to avoid code repetition and unify fseek
 // behavior with posix without sacrificing performance in the windows implementation
 size_t
-//TODO: Add unit tests
 file_size(random_access_t& f, sys::error_code& ec)
 {
     auto start_pos = current_position(f, ec);
