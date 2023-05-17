@@ -74,8 +74,9 @@ BOOST_AUTO_TEST_CASE(test_cursor_operations, * ut::depends_on("suite_file_io/tes
 
         expected_position = 7;
         file_io::fseek(aio_file, expected_position, ec);
-        current_position = file_io::current_position(aio_file, ec);
-        BOOST_TEST(expected_position == current_position);
+        BOOST_TEST(expected_position == file_io::current_position(aio_file, ec));
+
+        BOOST_TEST(3 == file_io::file_remaining_size(aio_file, ec));
     });
     ctx.run();
 }
