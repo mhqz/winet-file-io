@@ -120,6 +120,21 @@ open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &e
     return open(file, exec, ec);
 }
 
+async_file_handle
+open_readonly( const asio::executor& exec
+             , const fs::path& p
+             , sys::error_code& ec)
+{
+    HANDLE file = ::CreateFile(p.string().c_str(),
+                               GENERIC_READ,        // DesiredAccess
+                               FILE_SHARE_READ,     // ShareMode
+                               NULL,                // SecurityAttributes
+                               OPEN_ALWAYS,         // CreationDisposition
+                               FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_READONLY, // FlagsAndAttributes
+                               NULL);               // TemplateFile
+    return open(file, exec, ec);
+}
+
 void
 read(async_file_handle& f
     , asio::mutable_buffer b
@@ -165,21 +180,6 @@ write(async_file_handle& f
         , asio::yield_context yield)
 {
     write_at_end(f, b, cancel, yield);
-}
-
-async_file_handle
-open_readonly( const asio::executor& exec
-        , const fs::path& p
-        , sys::error_code& ec)
-{
-    HANDLE file = ::CreateFile(p.string().c_str(),
-                               GENERIC_READ,        // DesiredAccess
-                               FILE_SHARE_READ,     // ShareMode
-                               NULL,                // SecurityAttributes
-                               OPEN_ALWAYS,         // CreationDisposition
-                               FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_READONLY, // FlagsAndAttributes
-                               NULL);               // TemplateFile
-    return open(file, exec, ec);
 }
 
 #endif
