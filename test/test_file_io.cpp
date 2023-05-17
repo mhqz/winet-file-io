@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_open_or_create)
                     temp_file.get_name(),
                     ec);
     });
-ctx.run();
+    ctx.run();
     BOOST_TEST(boost::filesystem::exists(temp_file.get_name()));
 }
 
@@ -65,17 +65,21 @@ BOOST_AUTO_TEST_CASE(test_cursor_operations, * ut::depends_on("suite_file_io/tes
                 temp_file.get_name(),
                 ec);
 
+        // Test end position
         size_t current_position = file_io::end_position(aio_file, ec);
         BOOST_TEST(expected_position == current_position);
 
+        // Test file size
         size_t expected_size = expected_string.size();
         size_t actual_size = file_io::file_size(aio_file, ec);
         BOOST_TEST(expected_size == actual_size);
 
+        // Test cursor movement
         expected_position = 7;
         file_io::fseek(aio_file, expected_position, ec);
         BOOST_TEST(expected_position == file_io::current_position(aio_file, ec));
 
+        // Test remaining size
         BOOST_TEST(3 == file_io::file_remaining_size(aio_file, ec));
     });
     ctx.run();
@@ -86,7 +90,7 @@ BOOST_AUTO_TEST_CASE(test_async_write)
     temp_file temp_file{test_id};
     std::string expected_string = "one-two-three";
 
-    // Create the file and write at the end of the file a few times
+    // Create the file and write at the end of it a few times
     asio::spawn(ctx, [&](asio::yield_context yield) {
         asio::steady_timer timer{ctx};
         timer.expires_from_now(std::chrono::seconds(default_timer));
