@@ -121,7 +121,6 @@ BOOST_AUTO_TEST_CASE(test_read_only_operations)
 
     asio::spawn(ctx, [&](asio::yield_context yield) {
         asio::steady_timer timer{ctx};
-        timer.expires_from_now(std::chrono::seconds(default_timer));
 
         // Create test file and close it
         async_file_handle aio_file_rw = file_io::open_or_create(
@@ -132,6 +131,7 @@ BOOST_AUTO_TEST_CASE(test_read_only_operations)
         aio_file_rw.close();
 
         // Open the file again in read-only mode
+        timer.expires_from_now(std::chrono::seconds(default_timer));
         timer.async_wait(yield);
         async_file_handle aio_file_ro = file_io::open_readonly(
                 ctx.get_executor(),
@@ -140,6 +140,21 @@ BOOST_AUTO_TEST_CASE(test_read_only_operations)
 
         file_io::read(aio_file_ro, asio::buffer(data_in), cancel, yield);
         BOOST_TEST(expected_string == data_in);
+        aio_file_ro.close();
+
+        // Check that the file is opened in read-only mode
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
+        aio_file_ro = file_io::open_readonly(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+        file_io::write_at(aio_file_ro, boost::asio::const_buffer("DEF456uvw", 9), 0, cancel, yield);
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
+        file_io::read(aio_file_ro, asio::buffer(data_in), cancel, yield);
+        BOOST_TEST(expected_string == data_in); // Checking with expected_string as the file should be unmodified
+        aio_file_ro.close();
     });
     ctx.run();
 }
