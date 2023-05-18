@@ -92,7 +92,7 @@ file_remaining_size(async_file_handle& f, sys::error_code& ec)
 }
 
 async_file_handle
-open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
+open(native_handle_t file, const asio::executor &exec, sys::error_code &ec) {
 
     async_file_handle f = async_file_handle(exec);
     if (file == INVALID_HANDLE_VALUE) {
@@ -109,7 +109,7 @@ open(HANDLE file, const asio::executor &exec, sys::error_code &ec) {
 
 async_file_handle
 open_or_create(const asio::executor &exec, const fs::path &p, sys::error_code &ec) {
-    HANDLE file = ::CreateFile(p.string().c_str(),
+    native_handle_t file = ::CreateFile(p.string().c_str(),
                                GENERIC_READ | GENERIC_WRITE,       // DesiredAccess
                                FILE_SHARE_READ | FILE_SHARE_WRITE, // ShareMode
                                NULL,                  // SecurityAttributes
@@ -125,7 +125,7 @@ open_readonly( const asio::executor& exec
              , const fs::path& p
              , sys::error_code& ec)
 {
-    HANDLE file = ::CreateFile(p.string().c_str(),
+    native_handle_t file = ::CreateFile(p.string().c_str(),
                                GENERIC_READ,        // DesiredAccess
                                FILE_SHARE_READ,     // ShareMode
                                NULL,                // SecurityAttributes
@@ -135,10 +135,9 @@ open_readonly( const asio::executor& exec
     return open(file, exec, ec);
 }
 
-//TODO: Adjust the type of lvalues receiving dup_fd
-HANDLE dup_fd(async_file_handle& f, sys::error_code& ec)
+native_handle_t dup_fd(async_file_handle& f, sys::error_code& ec)
 {
-    HANDLE file;
+    native_handle_t file;
     if(!::DuplicateHandle(
             ::GetCurrentProcess(), // hSourceProcessHandle
             f.native_handle(), // hSourceHandle
