@@ -215,4 +215,21 @@ BOOST_AUTO_TEST_CASE(test_truncate_file)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_check_or_create_directory)
+{
+    temp_file temp_file{test_id};
+
+    asio::spawn(ctx, [&](asio::yield_context yield) {
+        bool success = file_io::check_or_create_directory(
+                temp_file.get_name(), ec);
+        BOOST_CHECK(success);
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
+    });
+    ctx.run();
+    BOOST_REQUIRE(boost::filesystem::exists(temp_file.get_name()));
+    BOOST_CHECK(boost::filesystem::is_directory(temp_file.get_name()));
+}
+
 BOOST_AUTO_TEST_SUITE_END();
