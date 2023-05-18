@@ -50,6 +50,16 @@ check_or_create_directory(const fs::path& dir, sys::error_code& ec)
     }
 }
 
+void
+remove_file(const fs::path& p)
+{
+    if (!exists(p)) return;
+    assert(is_regular_file(p));
+    if (!is_regular_file(p)) return;
+    sys::error_code ignored_ec;
+    fs::remove(p, ignored_ec);
+}
+
 #ifdef _WIN32
 bool
 fseek_native(async_file_handle& file_handle, size_t pos) {

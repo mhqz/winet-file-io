@@ -232,4 +232,19 @@ BOOST_AUTO_TEST_CASE(test_check_or_create_directory)
     BOOST_CHECK(boost::filesystem::is_directory(temp_file.get_name()));
 }
 
+BOOST_AUTO_TEST_CASE(test_remove_file)
+{
+    temp_file temp_file{test_id};
+    asio::spawn(ctx, [&](asio::yield_context yield) {
+        async_file_handle aio_file = file_io::open_or_create(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+        BOOST_CHECK(boost::filesystem::exists(temp_file.get_name()));
+        file_io::remove_file(temp_file.get_name());
+        BOOST_CHECK(!boost::filesystem::is_directory(temp_file.get_name()));
+    });
+    ctx.run();
+}
+
 BOOST_AUTO_TEST_SUITE_END();
