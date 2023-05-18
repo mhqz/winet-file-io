@@ -189,4 +189,30 @@ BOOST_AUTO_TEST_CASE(test_dup_fd)
     }
 }
 
+BOOST_AUTO_TEST_CASE(test_truncate_file)
+{
+    temp_file temp_file{test_id};
+    std::string expected_string = "abc";
+
+    asio::spawn(ctx, [&](asio::yield_context yield) {
+        async_file_handle aio_file = file_io::open_or_create(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+        file_io::write(aio_file, boost::asio::const_buffer("abcXYZ", 6), cancel, yield);
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
+        file_io::truncate(aio_file, 3, ec);
+    });
+    ctx.run();
+
+    BOOST_REQUIRE(boost::filesystem::exists(temp_file.get_name()));
+    if (std::ifstream input{temp_file.get_name()} ) {
+        std::string current_string;
+        input >> current_string;
+        BOOST_TEST(expected_string == current_string);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END();
