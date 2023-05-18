@@ -135,6 +135,25 @@ open_readonly( const asio::executor& exec
     return open(file, exec, ec);
 }
 
+//TODO: Adjust the type of lvalues receiving dup_fd
+HANDLE dup_fd(async_file_handle& f, sys::error_code& ec)
+{
+    HANDLE file;
+    if(!::DuplicateHandle(
+            ::GetCurrentProcess(), // hSourceProcessHandle
+            f.native_handle(), // hSourceHandle
+            ::GetCurrentProcess(), // hTargetProcessHandle
+            &file, // lpTargetHandle
+            0, // dwDesiredAccess
+            FALSE, // bInheritHandle
+            DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS //dwOptions
+    )) {
+        ec = last_error();
+        if (!ec) ec = make_error_code(errc::no_message);
+    }
+    return file;
+}
+
 void
 read(async_file_handle& f
     , asio::mutable_buffer b
