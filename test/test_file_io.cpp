@@ -92,9 +92,6 @@ BOOST_AUTO_TEST_CASE(test_async_write)
 
     // Create the file and write at the end of it a few times
     asio::spawn(ctx, [&](asio::yield_context yield) {
-        asio::steady_timer timer{ctx};
-        timer.expires_from_now(std::chrono::seconds(default_timer));
-        timer.async_wait(yield);
         async_file_handle aio_file = file_io::open_or_create(
                 ctx.get_executor(),
                 temp_file.get_name(),
@@ -102,6 +99,9 @@ BOOST_AUTO_TEST_CASE(test_async_write)
         file_io::write(aio_file, boost::asio::const_buffer("one", 3), cancel, yield);
         file_io::write(aio_file, boost::asio::const_buffer("-two", 4), cancel, yield);
         file_io::write(aio_file, boost::asio::const_buffer("-three", 6), cancel, yield);
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
     });
     ctx.run();
 
