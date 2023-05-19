@@ -247,4 +247,24 @@ BOOST_AUTO_TEST_CASE(test_remove_file)
     ctx.run();
 }
 
+BOOST_AUTO_TEST_CASE(test_read_and_write_numbers)
+{
+    temp_file temp_file{test_id};
+    size_t expected_number = 1248;
+
+    asio::spawn(ctx, [&](asio::yield_context yield) {
+        async_file_handle aio_file = file_io::open_or_create(
+                ctx.get_executor(),
+                temp_file.get_name(),
+                ec);
+        file_io::write_number(aio_file, expected_number, cancel, yield);
+        asio::steady_timer timer{ctx};
+        timer.expires_from_now(std::chrono::seconds(default_timer));
+        timer.async_wait(yield);
+        size_t actual_number = file_io::read_number<size_t>(aio_file, cancel, yield);
+        BOOST_CHECK(expected_number == actual_number);
+    });
+    ctx.run();
+}
+
 BOOST_AUTO_TEST_SUITE_END();
